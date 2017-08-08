@@ -1,0 +1,11 @@
+#!/usr/bin/env perl5.10.1
+
+use strict;
+use warnings;
+
+use lib "$ENV{TENX_LIB}";
+use lib "$ENV{TENX_PERL5LIB}";
+
+use above "Tenx";
+use Tenx::Command;
+Tenx::Command->execute_with_shell_params_and_exit();
