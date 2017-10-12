@@ -1,9 +1,9 @@
-#!/usr/bin/env perl5.10.1
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
 
-use TestEnv;
+use TenxTestEnv;
 
 use Test::More tests => 1;
 
