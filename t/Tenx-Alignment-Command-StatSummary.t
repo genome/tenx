@@ -9,7 +9,7 @@ use Path::Class;
 use Test::Exception;
 use Test::More tests => 3;
 
-my $pkg = 'Tenx::Command::Alignment::StatSummary';
+my $pkg = 'Tenx::Alignment::Command::StatSummary';
 use_ok($pkg) or die;
 
 subtest 'execute' => sub{

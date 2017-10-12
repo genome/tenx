@@ -13,7 +13,7 @@ my %test;
 subtest 'setup' => sub{
     plan tests => 2;
 
-    $test{pkg} = 'Tenx::Command::Alignment::Status';
+    $test{pkg} = 'Tenx::Alignment::Command::Status';
     use_ok($test{pkg}) or die;
 
     $test{alignment} = Tenx::Alignment->__define__(

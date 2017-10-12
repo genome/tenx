@@ -8,5 +8,11 @@ class Tenx::Command {
     doc => '10X Genomics commands and utilites',
 };
 
-1;
+# set commands and classes instead of using the directory structure
+my %command_map = (
+    alignment => 'Tenx::Alignment::Command',
+    reads => 'Tenx::Reads::Command',
+    reference => 'Tenx::Reference::Command',
+);
 
+1;

@@ -1,4 +1,4 @@
-package Tenx::Command::Alignment::StatSummary;
+package Tenx::Alignment::Command::StatSummary;
 
 use strict;
 use warnings 'FATAL';
@@ -7,7 +7,7 @@ use Path::Class;
 use Text::CSV;
 use YAML;
 
-class Tenx::Command::Alignment::StatSummary {
+class Tenx::Alignment::Command::StatSummary {
     is => 'Command::V2',
     has_input => {
         directory => {

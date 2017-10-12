@@ -1,7 +1,7 @@
-package Tenx::Command::Alignment::CreateFromDirectory;
+package Tenx::Alignment::Command::CreateFromDirectory;
 
 use strict;
-use warnings;
+use warnings 'FATAL';
 
 use List::MoreUtils;
 use File::Slurp;
@@ -18,7 +18,7 @@ my %inputs = map {
         }
 } Tenx::Alignment->__meta__->property_meta_for_name('directory');
 
-class Tenx::Command::Alignment::CreateFromDirectory { 
+class Tenx::Alignment::Command::CreateFromDirectory { 
     is => 'Command::V2',
     has_input => \%inputs,
     doc => 'create a longranger alignment db entry from a directory',
@@ -75,4 +75,3 @@ sub _resolve_params_from_directory {
 }
 
 1;
-

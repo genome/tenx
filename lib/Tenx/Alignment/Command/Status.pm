@@ -1,4 +1,4 @@
-package Tenx::Command::Alignment::Status;
+package Tenx::Alignment::Command::Status;
 
 use strict;
 use warnings 'FATAL';
@@ -9,7 +9,7 @@ use IPC::Open3;
 use List::MoreUtils;
 use Path::Class;
 
-class Tenx::Command::Alignment::Status {
+class Tenx::Alignment::Command::Status {
     is => 'Command::V2',
     has_input => {
         alignment => {

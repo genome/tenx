@@ -6,5 +6,5 @@ use warnings;
 use TestEnv;
 use Test::More tests => 1;
 
-use_ok('Tenx::Command::Alignment') or die;
+use_ok('Tenx::Alignment::Command') or die;
 done_testing();
