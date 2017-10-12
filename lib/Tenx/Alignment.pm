@@ -28,7 +28,7 @@ class Tenx::Alignment {
             doc => 'The status of the alignment: running, succeeded, failed, etc.',
         },
     },
-    data_source => Config::get('ds_mysql'),
+    data_source => Tenx::Config::get('ds_tenx'),
 };
 
 1;

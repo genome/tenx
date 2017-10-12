@@ -16,22 +16,19 @@ INIT { # runs after compilation, right before execution
 
     $repo_path = dir(__FILE__)->absolute->parent->parent;
     $test_data_directory = $repo_path->subdir('t', 'data');
+
     my $lib = $repo_path->subdir('lib');
-    print "$lib\n";
     eval "use lib '$lib';";
     die "FATAL: $@" if $@;
 
     eval 'use Tenx';
     die "FATAL: $@" if $@;
 
-sub test_data_directory { repo_path()->subdir('t', 'data') }
-
-    Tenx::Config::set('ds_prod', 'Tenx::DataSource::TestDb');
-    Tenx::Config::set('ds_testdb_server', $test_data_directory->subdir('test.db'));
+    Tenx::Config::set('ds_tenx', 'Tenx::DataSource::SQLite');
+    Tenx::Config::set('ds_sqlite_server', $test_data_directory->subdir('test.db'));
     Tenx::Config::set('environment', 'test');
 
 }
-
 
 sub test_data_directory_for_class {
     my $class = shift;

@@ -20,7 +20,7 @@ class Tenx::Reference {
             doc => 'The reference taxon.',
         },
     },
-    data_source => Config::get('ds_mysql'),
+    data_source => Tenx::Config::get('ds_tenx'),
 };
 
 sub __display_name__ { sprintf('%s (%s)', $_[0]->name, $_[0]->directory) }

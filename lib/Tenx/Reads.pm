@@ -24,7 +24,7 @@ class Tenx::Reads {
             calculate => q| ( defined $targets_path ? 'targeted' : 'wgs' ) |,
         },
     },
-    data_source => Config::get('ds_mysql'),
+    data_source => Tenx::Config::get('ds_tenx'),
 };
 
 sub __display_name__ { sprintf('%s (%s %s)', $_[0]->sample_name, $_[0]->type, $_[0]->directory) }
