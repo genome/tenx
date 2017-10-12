@@ -21,7 +21,7 @@ subtest 'setup' => sub{
     );
     use_ok($test{pkg}) or die;
 
-    $test{data_dir} = dir( TestEnv::test_data_directory_for_package('Tenx::Alignment') );
+    $test{data_dir} = dir( TenxTestEnv::test_data_directory_for_class('Tenx::Alignment') );
     $test{directory} = $test{data_dir}->subdir('succeeded');
 
 };
