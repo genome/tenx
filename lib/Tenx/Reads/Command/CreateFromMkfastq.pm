@@ -1,11 +1,11 @@
-package Tenx::Command::Reads::CreateFromMkfastq;
+package Tenx::Reads::Command::CreateFromMkfastq;
 
 use strict;
-use warnings;
+use warnings 'FATAL';
 
 use Path::Class;
 
-class Tenx::Command::Reads::CreateFromMkfastq { 
+class Tenx::Reads::Command::CreateFromMkfastq {
     is => 'Command::V2',
     has_input => {
         directory => {

@@ -14,7 +14,7 @@ subtest 'setup' => sub{
     plan tests => 1;
 
     %test = (
-        pkg => 'Tenx::Command::Reads::CreateFromMkfastq',
+        pkg => 'Tenx::Reads::Command::CreateFromMkfastq',
         sample_name => 'TESTSAMPLE',
     );
     use_ok($test{pkg}) or die;
