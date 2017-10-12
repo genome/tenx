@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use TestEnv;
+use TenxTestEnv;
 
 use Path::Class;
 use Test::Exception;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use TestEnv;
+use TenxTestEnv;
 use Test::More tests => 1;
 
 Tenx::Config::set('ds_mysql_server', 'server');

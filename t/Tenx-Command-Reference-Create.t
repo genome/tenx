@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use TestEnv;
+use TenxTestEnv;
 
 use Test::Exception;
 use Test::More tests => 3;

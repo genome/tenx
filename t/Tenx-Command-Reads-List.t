@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use TestEnv;
+use TenxTestEnv;
 use Test::More tests => 1;
 
 use_ok('Tenx::Command::Reads::List') or die;
