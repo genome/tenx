@@ -1,4 +1,6 @@
 requires 'Date::Format';
+requires 'Devel::Cover';
+requires 'Devel::Cover::Report::Coveralls';
 requires 'File::Slurp';
 requires 'List::MoreUtils';
 requires 'Params::Validate';
