@@ -14,7 +14,7 @@ class Tenx::Reference {
     has => {
         directory => { is => 'Text', doc => 'File system location.', },
         name => { is => 'Text', doc => 'Short name of the reference.', },
-        taxon => { is => 'Text', doc => 'The reference source taxon(s) short name.', },
+        taxon_name => { is => 'Text', column_name => 'taxon_id', doc => 'The reference source taxon(s) short name.', },
     },
     data_source => Tenx::Config::get('ds_tenx'),
 };
