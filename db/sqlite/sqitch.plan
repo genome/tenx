@@ -1,0 +1,7 @@
+%syntax-version=1.0.0
+%project=tenx
+%uri=https://github.com/genome/tenx
+
+create_tenx_references 2017-06-06T18:45:22Z Eddie Belter <ebelter@mullis.local> # Create TenX References!
+create_tenx_reads 2017-06-06T23:25:06Z Eddie Belter <ebelter@mullis.local> # Create TenX Reads!
+create_tenx_alignments 2017-06-06T23:27:18Z Eddie Belter <ebelter@mullis.local> # Add TenX Alignments!
