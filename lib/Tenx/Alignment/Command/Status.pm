@@ -68,7 +68,7 @@ sub _resolve_status_from_log {
     $self->status_message('Resolving status from log...');
 
     my $log_file = $self->_directory->file('_log');
-    my $log_st = stat($log_file) or die "$!",
+    my $log_st = stat("$log_file") or die "$!",
 
     my($wtr, $rdr, $err);
     my $pid = open3($wtr, $rdr, $err, 'tail', $log_file->stringify);
@@ -81,6 +81,7 @@ sub _resolve_status_from_log {
     elsif ( List::MoreUtils::any { $_ =~ /Pipestance failed/ } @log_tail ) {
         $status = 'failed';
         my $error_file = $self->_directory->parent->file($log_tail[-2]);
+        chomp $error_file;
         if ( -e "$error_file" ) {
             my $error_content = $error_file->slurp($error_file);
             print "$error_content\n";
