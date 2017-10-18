@@ -6,7 +6,6 @@ use warnings 'FATAL';
 use TenxTestEnv;
 use Test::More tests => 1;
 
-Tenx::Config::set('ds_sqlite_server', 'server');
-use_ok('Tenx::DataSource::TestDb');
+use_ok('Tenx::DataSource::SQLite');
 
 done_testing();

@@ -6,11 +6,11 @@ use warnings;
 use TenxTestEnv;
 use Test::More tests => 1;
 
-Tenx::Config::set('ds_mysql_server', 'server');
-Tenx::Config::set('ds_mysql_owner', 'owner');
-Tenx::Config::set('ds_mysql_login', 'login');
-Tenx::Config::set('ds_mysql_auth', 'auth');
-Tenx::Config::set('ds_mysql_database', 'database');
+Tenx::Config::set('ds_tenx_server', 'server');
+Tenx::Config::set('ds_tenx_owner', 'owner');
+Tenx::Config::set('ds_tenx_login', 'login');
+Tenx::Config::set('ds_tenx_auth', 'auth');
+Tenx::Config::set('ds_tenx_database', 'database');
 
 use_ok('Tenx::DataSource::MySQL');
 
