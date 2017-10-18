@@ -10,11 +10,11 @@ use TenxTestEnv;
 subtest 'Tenx' => sub {
     plan tests => 2;
 
-    my ($refimp_in_inc) = grep { /Tenx\.pm/ } keys %INC;
-    ok($refimp_in_inc, 'Tenx is in INC');
+    my ($in_inc) = grep { /Tenx\.pm/ } keys %INC;
+    ok($in_inc, 'Tenx is in INC');
 
     my $repo_path = TenxTestEnv::repo_path;
-    is($INC{$refimp_in_inc}, $repo_path->subdir('lib', 'Tenx.pm'), 'Tenx path is correct');
+    is($INC{$in_inc}, $repo_path->subdir('lib', 'Tenx.pm'), 'Tenx path is correct');
 
 };
 

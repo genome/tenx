@@ -36,7 +36,7 @@ sub execute {
     my $summary_file = $self->summary_file;
     $self->status_message('Summary file: %s', $summary_file->stringify);
     $self->fatal_message(
-        'Summary file does not exist! Has the longranger run succeeded? Check with "refimp tenx longranger status --h".', $summary_file->stringify
+        'Summary file does not exist! Has the longranger run succeeded? Check with "tenx alignment status --h".', $summary_file->stringify
     ) if not -s $summary_file;
 
     my $fh = IO::File->new($summary_file->stringify);
