@@ -16,7 +16,7 @@ class Tenx::Reference {
         name => { is => 'Text', doc => 'Short name of the reference.', },
         taxon_name => { is => 'Text', column_name => 'taxon_id', doc => 'The reference source taxon(s) short name.', },
     },
-    data_source => Tenx::Config::get('ds_tenx'),
+    data_source => Tenx::Config::get('tenx_ds'),
 };
 
 sub __display_name__ { sprintf('%s (%s)', $_[0]->name, $_[0]->directory) }
