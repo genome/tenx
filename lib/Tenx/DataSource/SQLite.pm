@@ -9,7 +9,7 @@ class Tenx::DataSource::SQLite {
     is => 'UR::DataSource::SQLite',
     has_constant => {
         server => {
-            value => Tenx::Config::get('ds_sqlite_server'),
+            value => Tenx::Config::get('tenx_ds_sqlite_server'),
         },
     },
 };
