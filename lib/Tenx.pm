@@ -14,8 +14,8 @@ UR::Object::Type->define(
 );
 
 use Tenx::Config;
-if ( $ENV{MYCONFIG_FILE} ) {
-    Tenx::Config::load_config_from_file( $ENV{MYCONFIG_FILE} );
+if ( $ENV{TENX_CONFIG_FILE} ) {
+    Tenx::Config::load_config_from_file( $ENV{TENX_CONFIG_FILE} );
 }
 
 1;
