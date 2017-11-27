@@ -1,4 +1,5 @@
 requires 'Date::Format';
+requires 'DBD::mysql';
 requires 'Devel::Cover';
 requires 'Devel::Cover::Report::Coveralls';
 requires 'File::Slurp';
