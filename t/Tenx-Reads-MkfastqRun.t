@@ -49,7 +49,7 @@ subtest "properties" => sub{
 };
 
 subtest "fastq_directory_for_sample_name" => sub{
-    plan tests => 5;
+    plan tests => 6;
 
     my $ss = $test{ss};
     throws_ok(sub{ $ss->fastq_directory_for_sample_name; }, qr/but 2 were expected/, 'fails without sample name');
@@ -76,6 +76,13 @@ subtest "fastq_directory_for_sample_name" => sub{
     );
 
     $sample_name = $test{expected_sample_names}[3];
+    is(
+        $ss->fastq_directory_for_sample_name($sample_name),
+        $ss->directory->subdir('outs')->subdir('fastq_path')->subdir('MM')->subdir($sample_name),
+        "fastq directory for $sample_name",
+    );
+
+    $sample_name = 'BLAH';
     throws_ok(
         sub{ $ss->fastq_directory_for_sample_name($sample_name); },
         qr/Could not find fastqs for sample: $sample_name/,
