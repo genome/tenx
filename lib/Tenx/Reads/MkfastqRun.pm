@@ -27,16 +27,16 @@ sub create {
     my ($class, $directory) = validate_pos(@_, {is => __PACKAGE__}, {is => SCALAR});
 
     $directory = dir($directory);
-    $class->fatal_message('Mkfastq directory given does not exist: %s', $directory) if !-d $directory->stringify;
+    $class->fatal_message('Mkfastq directory given does not exist: %s', $directory) if !-d "$directory";
 
     my $file = $directory->subdir('outs')->file('input_samplesheet.csv');
-    $class->fatal_message('No samplesheet found in mkfastq directory: %s', $file) if !-s $file->stringify;
+    $class->fatal_message('No samplesheet found in mkfastq directory: %s', $file) if !-s "$file";
 
     my $samplesheet = Tenx::Reads::SampleSheet->create($file);
 
     my $project_name;
     my $invocation_file = $directory->file('_invocation');
-    if ( -s $invocation_file ) {
+    if ( -s "$invocation_file" ) {
         $project_name = $class->get_project_from_invocation($invocation_file);
     }
 
@@ -71,13 +71,13 @@ sub fastq_directory_for_sample_name {
     # Fastq Finder
     my $has_fastqs = sub{
         my $fq_dir = shift;
-        return if not -d $fq_dir;
+        return if not -d "$fq_dir";
         my $fq_pattern = $fq_dir->file('*.fastq*');
-        my @fastq_files = glob($fq_pattern);
+        my @fastq_files = glob("$fq_pattern");
         return @fastq_files;
     };
 
-    # Check if there is a sample directory in the main directory
+    # Check sample /
     my $directory = $self->directory;
     my $sample_directory = $directory->subdir($sample_name);
     return $sample_directory if $has_fastqs->($sample_directory);
@@ -86,7 +86,11 @@ sub fastq_directory_for_sample_name {
     my @project_names = List::MoreUtils::uniq map { $_->{project} } grep { defined $_->{project} and $_->{name} eq $sample_name } @{$self->samples};
     unshift @project_names, $self->project_name if $self->project_name;
     for my $project_name ( @project_names ) {
+        # Check project / sample
         $sample_directory = $directory->subdir($project_name)->subdir($sample_name);
+        return $sample_directory if $has_fastqs->($sample_directory);
+        # Check outs / fastq_path / project / sample
+        $sample_directory = $directory->subdir('outs')->subdir('fastq_path')->subdir($project_name)->subdir($sample_name);
         return $sample_directory if $has_fastqs->($sample_directory);
     }
 
