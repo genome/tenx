@@ -22,36 +22,34 @@ subtest 'setup' => sub{
 };
 
 subtest 'fails' => sub{
-    plan tests => 3;
+    plan tests => 1;
 
-    throws_ok(sub{ $test{class}->create; }, qr//, 'fails w/o directory');
-    throws_ok(sub{ $test{class}->create(directory => $test{data_dir}->subdir('blah')); }, qr/Directory does not exist/, 'fails w/o invalid directory');
-    throws_ok(sub{ $test{class}->create(directory => $test{data_dir}); }, qr/Log file does not exist/, 'fails w/o log in directory');
+    throws_ok(sub{ $test{class}->create; }, qr//, 'fails w/o log_file');
 
 };
 
 subtest 'success log' => sub{
     plan tests => 2;
 
-    my $log = $test{class}->create(directory => $test{data_dir}->subdir('supernova-success'));
+    my $log = $test{class}->create(log_file => $test{data_dir}->subdir('supernova-success')->file('_log'));
     ok($log, 'created log');
     is($log->run_status, 'success', 'run status');
 
 };
 
-subtest 'zombie log' => sub{
+subtest 'running log' => sub{
     plan tests => 2;
 
-    my $log = $test{class}->create(directory => $test{data_dir}->subdir('supernova-zombie'));
+    my $log = $test{class}->create(log_file => $test{data_dir}->subdir('supernova-running')->file('_log'));
     ok($log, 'created log');
-    is($log->run_status, 'zombie', 'run status');
+    is($log->run_status, 'running', 'run status');
 
 };
 
 subtest 'fail log' => sub{
     plan tests => 2;
 
-    my $log = $test{class}->create(directory => $test{data_dir}->subdir('longranger-fail'));
+    my $log = $test{class}->create(log_file => $test{data_dir}->subdir('longranger-fail')->file('_log'));
     ok($log, 'created log');
     is($log->run_status, 'failed', 'run status');
 

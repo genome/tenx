@@ -4,15 +4,14 @@ use strict;
 use warnings 'FATAL';
 
 use DateTime;
-use File::stat 'stat';
 use List::MoreUtils 'firstval';
 use Path::Class;
 use Tenx::Util::Loader;
 
 class Tenx::Util::Run::Log {
     has => {
-        directory => {
-            is => 'Path::Class::Dir',
+        log_file => {
+            is => 'Path::Class::File',
             doc => 'Log file to analyze.',
         },
         time_zone => {
@@ -44,16 +43,7 @@ sub create {
 }
 
 sub _load_log {
-    my ($self) = @_;
-
-    my $directory = $self->directory;
-    $self->fatal_message("No directory file given!") if not $directory;
-    $self->fatal_message("Directory does not exist! $directory") if not -d "$directory";
-
-    my $log_file = $directory->file('_log');
-    $self->fatal_message("Log file does not exist! $log_file") if not -s "$log_file";
-
-    $self->loader( Tenx::Util::Loader->new("$log_file") );
+    $_[0]->loader( Tenx::Util::Loader->new($_[0]->log_file) );
 }
 
 sub _parse_log {
@@ -166,19 +156,7 @@ sub _resolve_status {
         }
     }
 
-    my $journal_path = $self->directory->subdir('journal');
-    return $self->run_status('unknown') if not -d "$journal_path";
-
-    my $journal_st = stat($journal_path);
-    if ( not $journal_st ) {
-        return $self->run_status('unknown');
-    }
-
-    my $journal_access_diff = ((time() - $journal_st->mtime) / 60);
-    #$self->journal_access_diff($journal_access_diff);
-    return $self->run_status('running') if $journal_access_diff < 10;
-
-    return $self->run_status('zombie');
+    $self->run_status('running');
 }
 
 1;
