@@ -4,10 +4,10 @@ use strict;
 use warnings 'FATAL';
 
 use DateTime;
-use File::Slurp 'slurp';
 use File::stat 'stat';
 use List::MoreUtils 'firstval';
 use Path::Class;
+use Tenx::Util::Loader;
 
 class Tenx::Util::Run::Log {
     has => {
@@ -25,7 +25,7 @@ class Tenx::Util::Run::Log {
         infos => { is => 'Array', },
         run_status => { is => 'Text', },
         stages => { is => 'Array', },
-        log_lines => { is => 'Array', },
+        loader => { is => 'Tenx::Util::Loader', },
     },
 };
 
@@ -53,14 +53,14 @@ sub _load_log {
     my $log_file = $directory->file('_log');
     $self->fatal_message("Log file does not exist! $log_file") if not -s "$log_file";
 
-    $self->log_lines([ slurp("$log_file") ]);
+    $self->loader( Tenx::Util::Loader->new("$log_file") );
 }
 
 sub _parse_log {
     my ($self) = @_;
 
     my @infos;
-    foreach my $line ( @{$self->log_lines} ) {
+    foreach my $line ( @{$self->loader->lines} ) {
         my $info = _parse_line($line);
         next if not $info;
         push @infos, $info;
@@ -153,7 +153,7 @@ sub _parse_date_time {
 sub _resolve_status {
     my ($self) = @_;
 
-    my @lines = @{$self->log_lines};
+    my @lines = @{$self->loader->lines};
     my $last = $#lines;
     my $start = $last - 10;
     my $status;
