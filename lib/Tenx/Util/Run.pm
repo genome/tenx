@@ -3,6 +3,7 @@ package Tenx::Util::Run;
 use strict;
 use warnings 'FATAL';
 
+use File::stat 'stat';
 use Tenx::Util::Run::Log;
 
 sub location { $_[0]->{location} }
@@ -18,6 +19,20 @@ sub log_file {
 
 sub log {
     Tenx::Util::Run::Log->create(log_file => $_[0]->log_file);
+}
+
+sub journal_status {
+    my ($self) = @_;
+
+    my $journal_path = $self->location->subdir('journal');
+    return 'unknown' if not -d "$journal_path";
+
+    my $journal_st = stat($journal_path);
+    return 'unknown' if not $journal_st;
+
+    my $journal_access_diff = ((time() - $journal_st->mtime) / 60);
+    return 'zombie' if $journal_access_diff > 10;
+    'running';
 }
 
 sub outs_directory {
