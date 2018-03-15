@@ -3,7 +3,8 @@
 use strict;
 use warnings 'FATAL';
 
-use Test::More tests => 4;
+use Test::Exception;
+use Test::More tests => 5;
 
 use TenxTestEnv;
 
@@ -18,6 +19,13 @@ subtest 'setup' => sub{
     ok(-d $test{data_dir}, 'data dir exists');
 
     $test{object} = $test{class}->new($test{data_dir}->subdir('supernova-success'));
+};
+
+subtest 'fails' => sub{
+    plan tests => 1;
+
+    throws_ok(sub{ $test{class}->new; }, qr/No run location given/, 'fails w/o location');
+
 };
 
 subtest 'log' => sub{

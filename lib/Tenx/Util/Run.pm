@@ -10,6 +10,7 @@ sub location { $_[0]->{location} }
 
 sub new {
     my ($class, $location) = @_;
+    die "No run location given!" if not $location;
     bless { location => $location }, $class;
 }
 
