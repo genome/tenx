@@ -6,7 +6,7 @@ use warnings 'FATAL';
 use DateTime;
 use List::MoreUtils 'firstval';
 use Path::Class;
-use Tenx::Util::Loader;
+use Tenx::Util::Reader::Factory;
 
 class Tenx::Util::Run::Log {
     has => {
@@ -24,7 +24,7 @@ class Tenx::Util::Run::Log {
         infos => { is => 'Array', },
         run_status => { is => 'Text', },
         stages => { is => 'Array', },
-        loader => { is => 'Tenx::Util::Loader', },
+        reader => { is => 'Tenx::Util::Reader', },
     },
 };
 
@@ -43,19 +43,18 @@ sub create {
 }
 
 sub _load_log {
-    $_[0]->loader( Tenx::Util::Loader->new($_[0]->log_file) );
+    $_[0]->reader( Tenx::Util::Reader::Factory->build_reader($_[0]->log_file) );
 }
 
 sub _parse_log {
     my ($self) = @_;
 
     my @infos;
-    foreach my $line ( @{$self->loader->lines} ) {
+    while ( my $line = $self->reader->getline ) {
         my $info = _parse_line($line);
         next if not $info;
         push @infos, $info;
     }
-
 
     $self->infos(\@infos);
 }
@@ -143,7 +142,7 @@ sub _parse_date_time {
 sub _resolve_status {
     my ($self) = @_;
 
-    my @lines = @{$self->loader->lines};
+    my @lines = $self->reader->reset->getlines;
     my $last = $#lines;
     my $start = $last - 10;
     my $status;
