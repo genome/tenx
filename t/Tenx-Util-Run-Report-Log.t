@@ -4,6 +4,7 @@ use strict;
 use warnings 'FATAL';
 
 use Test::More tests => 2;
+use Path::Class;
 
 use TenxTestEnv;
 
@@ -18,7 +19,8 @@ subtest 'setup' => sub{
     $test{data_dir} = TenxTestEnv::test_data_directory_for_class('Tenx::Util::Run');
     ok(-d $test{data_dir}, 'data dir exists');
 
-    my @runs = map { Tenx::Util::Run->new($test{data_dir}->subdir($_)) } (qw/ supernova-success /);
+    #my @runs = map { Tenx::Util::Run->new($test{data_dir}->subdir($_)) } (qw/ supernova-success /);
+    my @runs = ( Tenx::Util::Run->new(dir("/home/ebelter/dev/tenx")) );
     push @runs, Tenx::Util::Run->new($test{data_dir}->subdir('supernova-success'));
     ok(@runs, 'created runs');
     $test{runs} = \@runs;

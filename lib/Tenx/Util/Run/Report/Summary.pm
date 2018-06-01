@@ -5,8 +5,7 @@ use warnings 'FATAL';
 
 use Hash::Merge;
 use IO::String;
-use Path::Class;
-use Tenx::Util::Loader;
+use Tenx::Util::Reader::Factory;
 use Text::CSV;
 
 sub generate_yaml { YAML::Dump( _consolidate_runs(@_) ) }
@@ -47,8 +46,8 @@ sub _consolidate_runs {
         my $summary_csv = $run->summary_csv;
         warn "No summary csv for run ".$run->location if not 
 
-        my $loader = Tenx::Util::Loader->new($run->summary_csv);
-        my $io = $loader->io_handle;
+        my $reader = Tenx::Util::Reader::Factory->build($run->summary_csv);
+        my $io = $reader->io_handle;
         my $column_names = $csv->getline ($io);   
         die "No column names found in $summary_csv" if not $column_names;
         $csv->column_names(@$column_names);

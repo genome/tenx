@@ -4,6 +4,7 @@ use strict;
 use warnings 'FATAL';
 
 use File::stat 'stat';
+use Path::Class;
 use Tenx::Util::Run::Log;
 
 sub location { $_[0]->{location} }
@@ -11,13 +12,13 @@ sub location { $_[0]->{location} }
 sub new {
     my ($class, $location) = @_;
     die "No run location given!" if not $location;
+    die "Run location needs to be a Path::Class::Dir! $location" if not $location->isa('Path::Class::Dir');
+    die "Run location given does not exist!" if not -d "$location";
     bless { location => $location }, $class;
 }
 
 sub status {
     my ($self) = @_;
-
-    
 
 }
 
