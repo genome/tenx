@@ -1,4 +1,4 @@
-package Tenx::Gcloudy::Command::VerifyUpload;
+package Tenx::Gcloud::Command::VerifyUpload;
 
 use strict;
 use warnings 'FATAL';
@@ -10,24 +10,34 @@ use IO::File
 class Tenx::Gcloudy::Command::VerifyUpload {
     is => 'Command::V2',
     has => {
+        ldir => {
+            is => 'Text',
+            doc => 'Local directory to verify.',
+        },
+        rdir => {
+            is => 'Text',
+            doc => 'Remote gcloud directory. Do not include gs:/ protocol.',
+        },
     },
 };
 
 sub execute {
     my ($self) = @_;
 
+    # FIXME
     my $assembly_id = $ARGV[0];
-    die "No assembly id given!" if not $assembly_id;
-    print STDERR "Assembly id: $assembly_id\n";
+    $self->fatal_message("No assembly id given!") if not $assembly_id;
+
+    $self->status_message("Assembly id: $assembly_id");
     my $rassembly_id = ( $ARGV[1] ) ? $ARGV[1] : $assembly_id;
-    print STDERR "Remote assembly id: $assembly_id\n";
+    $self->status_message("Remote assembly id: $assembly_id");
 
     my $adir = File::Spec->join('', 'mnt', 'disks', 'linked-reads-pilot', 'assembly', $assembly_id);
-    my $local = _build_local($adir);
-    die "No local paths found\n" if not %$local;
+    my $local = $self->_build_local($adir);
+    $self->fatal_message( "No local paths found") if not %$local;
     my $rdir = File::Spec->join('mgi-rg-linked-reads-ccdg-pilot', 'assembly', $rassembly_id);
-    my $remote = _build_remote($rdir);
-    die "No remote paths found\n" if not %$remote;
+    my $remote = $self->_build_remote($rdir);
+    $self->fatal_message( "No remote paths found)" if not %$remote;
 
     my @missing;
     for my $lpath ( keys %$local ) {
@@ -35,16 +45,16 @@ sub execute {
     }
 
     if ( @missing ) {
-        die "ERROR Found @missing files!";
+        $self->fatal_message( "ERROR Found @missing files!";
     }
     else {
-        print STDERR "All local files found on remote!\n";
+        $self->status_message("All local files found on remote!");
     }
 }
 
 sub _build_local {
-    my ($dir) = @_;
-    die "No directory given." if not $dir;
+    my ($self, $dir) = @_;
+    $self->fatal_message( "No directory given." if not $dir;
     print STDERR "Find local paths for $dir\n";
 
     my (%local);
@@ -65,12 +75,13 @@ sub _build_local {
 }
 
 sub _build_remote {
-    my ($rdir) = @_;
-    die "No url given." if not $rdir;
-    print STDERR "Find remote paths for $rdir\n";
+    my ($self) = @_;
+
+    my $rdir = $self->rdir;
+    $self->status_message("Find remote paths for $rdir");
 
     my $url = 'gs://'.$rdir.'**';
-    print "Run: gsutil ls -l $url\n";
+    $self->status_message("Run: gsutil ls -l $url");
     my $fh = IO::File->new("gsutil ls -l $url |");
     my %remote;
     while ( my $line = $fh->getline ) {
