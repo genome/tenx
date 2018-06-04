@@ -1,37 +1,46 @@
-#!/usr/bin/env perl
+package Tenx::Gcloudy::Command::VerifyUpload;
 
 use strict;
 use warnings 'FATAL';
 
 use File::Find 'find';
 use File::Spec;
+use IO::File
 
-my $assembly_id = $ARGV[0];
-die "No assembly id given!" if not $assembly_id;
-print STDERR "Assembly id: $assembly_id\n";
-my $rassembly_id = ( $ARGV[1] ) ? $ARGV[1] : $assembly_id;
-print STDERR "Remote assembly id: $assembly_id\n";
+class Tenx::Gcloudy::Command::VerifyUpload {
+    is => 'Command::V2',
+    has => {
+    },
+};
 
-my $adir = File::Spec->join('', 'mnt', 'disks', 'linked-reads-pilot', 'assembly', $assembly_id);
-my $local = _build_local($adir);
-die "No local paths found\n" if not %$local;
-my $rdir = File::Spec->join('mgi-rg-linked-reads-ccdg-pilot', 'assembly', $rassembly_id);
-my $remote = _build_remote($rdir);
-die "No remote paths found\n" if not %$remote;
+sub execute {
+    my ($self) = @_;
 
-my @missing;
-for my $lpath ( keys %$local ) {
-    push @missing, $lpath if not exists $remote->{$lpath};
+    my $assembly_id = $ARGV[0];
+    die "No assembly id given!" if not $assembly_id;
+    print STDERR "Assembly id: $assembly_id\n";
+    my $rassembly_id = ( $ARGV[1] ) ? $ARGV[1] : $assembly_id;
+    print STDERR "Remote assembly id: $assembly_id\n";
+
+    my $adir = File::Spec->join('', 'mnt', 'disks', 'linked-reads-pilot', 'assembly', $assembly_id);
+    my $local = _build_local($adir);
+    die "No local paths found\n" if not %$local;
+    my $rdir = File::Spec->join('mgi-rg-linked-reads-ccdg-pilot', 'assembly', $rassembly_id);
+    my $remote = _build_remote($rdir);
+    die "No remote paths found\n" if not %$remote;
+
+    my @missing;
+    for my $lpath ( keys %$local ) {
+        push @missing, $lpath if not exists $remote->{$lpath};
+    }
+
+    if ( @missing ) {
+        die "ERROR Found @missing files!";
+    }
+    else {
+        print STDERR "All local files found on remote!\n";
+    }
 }
-
-if ( @missing ) {
-    die "ERROR Found @missing files!";
-}
-else {
-    print STDERR "All local files found on remote!\n";
-}
-
-###
 
 sub _build_local {
     my ($dir) = @_;
