@@ -5,7 +5,7 @@ use warnings 'FATAL';
 
 use File::Find 'find';
 use File::Spec;
-use IO::File
+use IO::File;
 
 class Tenx::Gcloudy::Command::VerifyUpload {
     is => 'Command::V2',
@@ -34,10 +34,10 @@ sub execute {
 
     my $adir = File::Spec->join('', 'mnt', 'disks', 'linked-reads-pilot', 'assembly', $assembly_id);
     my $local = $self->_build_local($adir);
-    $self->fatal_message( "No local paths found") if not %$local;
+    $self->fatal_message("No local paths found") if not %$local;
     my $rdir = File::Spec->join('mgi-rg-linked-reads-ccdg-pilot', 'assembly', $rassembly_id);
     my $remote = $self->_build_remote($rdir);
-    $self->fatal_message( "No remote paths found)" if not %$remote;
+    $self->fatal_message("No remote paths found") if not %$remote;
 
     my @missing;
     for my $lpath ( keys %$local ) {
@@ -45,7 +45,7 @@ sub execute {
     }
 
     if ( @missing ) {
-        $self->fatal_message( "ERROR Found @missing files!";
+        $self->fatal_message( "ERROR Found @missing files!");
     }
     else {
         $self->status_message("All local files found on remote!");
@@ -54,7 +54,7 @@ sub execute {
 
 sub _build_local {
     my ($self, $dir) = @_;
-    $self->fatal_message( "No directory given." if not $dir;
+    $self->fatal_message( "No directory given.") if not $dir;
     print STDERR "Find local paths for $dir\n";
 
     my (%local);

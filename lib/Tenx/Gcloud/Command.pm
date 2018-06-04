@@ -5,6 +5,6 @@ use warnings 'FATAL';
 
 class Tenx::Gcloud::Command {
     is => 'Command::Tree',
-);
+};
 
 1;
