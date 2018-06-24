@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -e
+
+sample="${1}"
+if [ -z "${sample}" ]; then
+    echo "No sample given!"
+    exit 1
+fi
+
+echo "GCloud Auth"
+gcloud auth activate-service-account --key-file /etc/gcp-auth/WashU-Genome-Inh-Dis-Analysis.service-account-key.json
+
+data_base_path="/mnt/disks/data"
+fastq_path="${data_base_path}/reads/${sample}"
+mkdir -p "${fastq_path}"
+assembly_base_path="${data_base_path}/assembly"
+mkdir -p "${assembly_base_path}"
+
+echo "Sample: ${sample}"
+echo "Rsyncing fastqs from the object store..."
+cd "${fastq_path}"
+gsutil ls gs://mgi-rg-linked-reads-ccdg-pilot/reads/H53J3DSXX/${sample}/
+gsutil -m rsync -r gs://mgi-rg-linked-reads-ccdg-pilot/reads/H53J3DSXX/${sample}/ .
+echo "Rsyncing fastqs from the object store...OK"
+
+echo "Running supernova..."
+cd "${assbemly_base_path}"
+source /opt/supernova-2.0.1/sourceme.bash
+supernova run --id="${sample}" --fastqs="${fastq_path}" --uiport=63108 --nodebugmem --localcores=50 --localmem=320
+echo "Running supernova...OK"
+
+echo "Running mkoutput..."
+assembly_path="${assembly_base_path}/${sample}"
+mkoutput_path="${assembly_path}/mkoutput";
+mkdir -p "${mkoutput_path}"
+cd "${mkoutput_dir}"
+for style in raw megabubbles pseudohap2; do
+	exec supernova mkoutput --asmdir="${assembly_path}/outs/assembly" --outprefix="${sample}.${style}" --style="${style}"
+done
+echo "Running mkoutput...OK"
+
+echo "Rsyncing assembly to object store..."
+cd "${assembly_base_path}"
+echo gsutil -m rsync -r "${sample}" "gs://mgi-rg-linked-reads-ccdg-pilot/assembly/${sample}"
+echo "Rsyncing assembly to object store...OK"
+
+echo "Done!"

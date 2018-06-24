@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -e
+
+assembly_id="${1}"
+if [ -z "${assembly_id}" ]; then
+	echo "USAGE: $0 ASSEMBLY_ID"
+	exit 1
+fi
+
+assembly_dir="/mnt/disks/linked-reads-pilot/assembly/${assembly_id}";
+if [ ! -d "${assembly_dir}" ]; then
+	echo "No assembly directory! ${assembly_dir}"
+	exit 1
+fi
+
+mkoutput_dir="${assembly_dir}/mkoutput";
+mkdir -p "${mkoutput_dir}"
+cd "${mkoutput_dir}"
+
+source /opt/supernova-2.0.0/sourceme.bash
+for style in raw megabubbles pseudohap2; do
+	exec "supernova mkoutput --asmdir=$assembly_dir/outs/assembly --outprefix=${assembly_id}.${style} --style=${style}"
+done
