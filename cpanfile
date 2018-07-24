@@ -1,5 +1,7 @@
-requires 'Date::Format';
+requires 'Bio::Seq';
+requires 'Bio::SeqIO';
 requires 'DBD::mysql';
+requires 'Date::Format';
 requires 'Devel::Cover';
 requires 'Devel::Cover::Report::Coveralls';
 requires 'File::Slurp';
