@@ -4,10 +4,7 @@ use strict;
 use warnings 'FATAL';
 
 use Bio::SeqIO;
-use Data::Dumper;
-use Path::Class;
-use Text::CSV;
-use YAML;
+use List::Util;
 
 class Tenx::Assembly::Command::Stats::Quick {
     is => 'Command::V2',
@@ -23,10 +20,6 @@ class Tenx::Assembly::Command::Stats::Quick {
             default_value => 1,
             doc => 'Minimum ',
         },
-    },
-    has_calculated_constant_optional => {
-        _directory => { calculate_from => [qw/ directory /], calculate => q| Path::Class::dir($directory) |, },
-        summary_file => { calculate_from => [qw/ _directory /], calculate => q| $_directory->subdir('outs')->file('summary.csv') |, },
     },
 };
 
@@ -47,12 +40,12 @@ sub execute {
     my $max_scaffold_length = 0;
     my $max_contig_length = 0;
     while( my $seq = $reader->next_seq ) {
-        #print 'Processing '.$seq->id."\n";
         my $scaffold_length = length $seq->seq;
-        set_breakdown_length( \%metrics, $scaffold_length, 'SCAF' );
+        my $bd_length = get_breakdown_length($scaffold_length);
+        $metrics{'BD'}{'SCAF'}{$bd_length}{'len'} += $scaffold_length;
+        $metrics{'BD'}{'SCAF'}{$bd_length}{'ct'}++;
         $metrics{'SCAFFOLD_LENGTHS'} += $scaffold_length;
         $metrics{'SCAFFOLD_COUNT'}++;
-        #push @{$metrics{'IND_SCAFFOLDS_LENGTHS'}}, $scaffold_length;
         push @scaf_lengths, $scaffold_length;
         if( $scaffold_length > $max_scaffold_length ) {
             $metrics{'MAX_SCAFFOLD_LENGTH'} = $scaffold_length;
@@ -63,10 +56,11 @@ sub execute {
             $metrics{'MAX_SCAFFOLD_BASES_LENGTH'} = length $sequence;
         }
         my @contigs = split(/N{$min_Ns_for_gap,}+/i, $seq->seq);
-        #print Dumper \@contigs;
         for my $contig( @contigs ) {
             my $contig_length = length $contig;
-            set_breakdown_length( \%metrics, $contig_length, 'CTG' );
+            my $bd_length = get_breakdown_length($contig_length);
+            $metrics{'BD'}{'CTG'}{$bd_length}{'len'} += $contig_length;
+            $metrics{'BD'}{'CTG'}{$bd_length}{'ct'}++;
             push @ctg_lengths, $contig_length;
             $metrics{'CONTIG_LENGTHS'} += $contig_length;
             $metrics{'CONTIG_COUNT'}++;
@@ -77,9 +71,6 @@ sub execute {
         }
     }
 
-    #print YAML::Dump \%metrics;
-
-    # CALCULATE n50 length
     @scaf_lengths = sort {$b<=>$a} @scaf_lengths;
     my $n50_length = 0;
     my $total_lengths;
@@ -121,58 +112,48 @@ sub execute {
     print_length_bd( \%metrics, 'CTG' );
 }
 
+sub lengths_and_labels {
+    {
+        1000000 => '> 1M',
+        250000 => '250K--1M',
+        100000 => '100K--250K',
+        10000 => '10K--100K',
+        5000 => '5K--10K',
+        2000 => '2K--5K',
+        0 => '0--2K',
+    }
+}
+sub bd_lengths {
+    my $lengths_and_labels = lengths_and_labels();
+    sort { $b <=> $a } keys %$lengths_and_labels;
+}
+sub get_label_for_bd_length {
+    my ($bd_length) = @_;
+    die "No bd_length given to get_label_for_bd_length!" if not defined $bd_length;
+    my $lengths_and_labels = lengths_and_labels();
+    $lengths_and_labels->{$bd_length};
+}
+
 sub print_length_bd {
     my ($metrics, $type) = @_;
     my $subject = ( $type eq 'SCAF' )
     ? 'Scaffolds'
     : 'Contigs' ;
-    my @len_types = ('> 1M', '250K--1M', '100K--250K', '10K--100K', '5K--10K', '2K--5K', '0--2K');
-    for my $len_type( @len_types ) {
-       my $length = ( exists $metrics->{'BD'}{$type}{$len_type}{'len'} )
-	   ? $metrics->{'BD'}{$type}{$len_type}{'len'}
+    for my $bd_length ( bd_lengths() ) {
+       my $length = ( exists $metrics->{'BD'}{$type}{$bd_length}{'len'} )
+	   ? $metrics->{'BD'}{$type}{$bd_length}{'len'}
            : 0 ;
-       my $count = ( exists $metrics->{'BD'}{$type}{$len_type}{'ct'} )
-	   ? $metrics->{'BD'}{$type}{$len_type}{'ct'}
+       my $count = ( exists $metrics->{'BD'}{$type}{$bd_length}{'ct'} )
+	   ? $metrics->{'BD'}{$type}{$bd_length}{'ct'}
            : 0 ;
-       print "  $subject $len_type: $count ( $length bp )\n";
+       printf("  $subject %s: $count ( $length bp )\n", get_label_for_bd_length($bd_length));
     }
 }
 
-sub set_breakdown_length {
-    my ($metrics, $length, $type) = @_;
-    my @len_types = ('> 1M', '250K--1M', '100K--250K', '10K--100K', '5K--10K', '2K--5K', '0--2K');
-    if( $length > 1000000 ) {
-	$metrics->{'BD'}{$type}{$len_types[0]}{'len'} += $length;
-	$metrics->{'BD'}{$type}{$len_types[0]}{'ct'} ++;
-    }
-    elsif( $length > 250000 ) {
-	$metrics->{'BD'}{$type}{$len_types[1]}{'len'} += $length;
-	$metrics->{'BD'}{$type}{$len_types[1]}{'ct'} ++;
-    }
-    elsif( $length > 100000 ) {
-	$metrics->{'BD'}{$type}{$len_types[2]}{'len'} += $length;
-	$metrics->{'BD'}{$type}{$len_types[2]}{'ct'} ++;
-    }
-    elsif( $length > 10000 ) {
-	$metrics->{'BD'}{$type}{$len_types[3]}{'len'} += $length;
-	$metrics->{'BD'}{$type}{$len_types[3]}{'ct'} ++;
-    }
-    elsif( $length > 5000 ) {
-	$metrics->{'BD'}{$type}{$len_types[4]}{'len'} += $length;
-	$metrics->{'BD'}{$type}{$len_types[4]}{'ct'} ++;
-    }
-    elsif( $length > 2000 ) {
-	$metrics->{'BD'}{$type}{$len_types[5]}{'len'} += $length;
-	$metrics->{'BD'}{$type}{$len_types[5]}{'ct'} ++;
-    }
-    elsif( $length > 0 ) {
-	$metrics->{'BD'}{$type}{$len_types[6]}{'len'} += $length;
-	$metrics->{'BD'}{$type}{$len_types[6]}{'ct'} ++;
-    }
-    else {
-	# shouldn't happen
-	die "TYPE: $type, LENGHT: $length\n";
-    }
+sub get_breakdown_length {
+    my ($length) = @_;
+    die "No length given to get_breakdown_length" if not defined $length;
+    List::Util::first { $length >= $_ } bd_lengths();
 }
 
 1;

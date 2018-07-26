@@ -14,7 +14,7 @@ subtest 'setup' => sub{
     plan tests => 2;
 
     $test{class} = 'Tenx::Assembly::Command::Stats::Quick';
-    use_ok($test{class});
+    use_ok($test{class}) or die;
     $test{data_dir} = TenxTestEnv::test_data_directory_for_class($test{class});
     ok(-d $test{data_dir}, 'data dir exists');
 
