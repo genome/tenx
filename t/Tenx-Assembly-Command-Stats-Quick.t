@@ -7,7 +7,7 @@ use TenxTestEnv;
 
 use File::Slurp 'slurp';
 use Test::Exception;
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 my %test;
 subtest 'setup' => sub{
@@ -29,6 +29,19 @@ subtest 'success' => sub{
     lives_ok(sub{ $test{class}->execute(fasta_file => $test{data_dir}->file('fasta')->stringify); }, 'execute'); 
     
     my $expected_output = slurp($test{data_dir}->file('fasta.stats')->stringify);
+    ok($expected_output, 'loaded expected output');
+    is($output, $expected_output, 'output matches');
+
+};
+
+subtest 'success zero length scaffold' => sub{
+    plan tests => 3;
+
+    my $output;
+    open local(*STDOUT), '>', \$output or die $!;
+    lives_ok(sub{ $test{class}->execute(fasta_file => $test{data_dir}->file('zero-length-scaffold.fasta')->stringify); }, 'execute'); 
+    
+    my $expected_output = slurp($test{data_dir}->file('zero-length-scaffold.fasta.stats')->stringify);
     ok($expected_output, 'loaded expected output');
     is($output, $expected_output, 'output matches');
 

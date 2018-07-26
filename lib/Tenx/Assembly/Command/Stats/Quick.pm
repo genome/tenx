@@ -37,10 +37,11 @@ sub execute {
     my %metrics;
     my @scaf_lengths;
     my @ctg_lengths;
-    my $max_scaffold_length = 0;
-    my $max_contig_length = 0;
+    my $max_scaffold_length = -1;
+    my $max_contig_length = -1;
     while( my $seq = $reader->next_seq ) {
-        my $scaffold_length = length $seq->seq;
+        my $sequence = $seq->seq || '';
+        my $scaffold_length = $seq->length || 0;
         my $bd_length = get_breakdown_length($scaffold_length);
         $metrics{'BD'}{'SCAF'}{$bd_length}{'len'} += $scaffold_length;
         $metrics{'BD'}{'SCAF'}{$bd_length}{'ct'}++;
@@ -51,11 +52,13 @@ sub execute {
             $metrics{'MAX_SCAFFOLD_LENGTH'} = $scaffold_length;
             $max_scaffold_length = $scaffold_length;
             $metrics{'MAX_SCAFFOLD_ID'} = $seq->id;
-            my $sequence = $seq->seq;
             $sequence =~ s/N//ig;
             $metrics{'MAX_SCAFFOLD_BASES_LENGTH'} = length $sequence;
         }
-        my @contigs = split(/N{$min_Ns_for_gap,}+/i, $seq->seq);
+        my @contigs = ( $scaffold_length > 0 )
+        ? split( /N{$min_Ns_for_gap,}+/i, ($sequence || '') )
+        : '';
+        #my @contigs = split( /N{$min_Ns_for_gap,}+/i, ($seq->seq || '') );
         for my $contig( @contigs ) {
             my $contig_length = length $contig;
             my $bd_length = get_breakdown_length($contig_length);
