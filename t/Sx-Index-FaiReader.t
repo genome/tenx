@@ -8,8 +8,6 @@ use TenxTestEnv;
 use Test::Exception;
 use Test::More tests => 4;
 
-use_ok('Sx::Command') or die;
-
 my %test = ( class => 'Sx::Index::FaiReader', );
 subtest 'setup' => sub{
     plan tests => 2;
@@ -17,6 +15,15 @@ subtest 'setup' => sub{
     use_ok($test{class}) or die;
     $test{data_dir} = TenxTestEnv::test_data_directory_for_class($test{class});
     ok(-d $test{data_dir}->stringify, 'data dir exists');
+
+    $test{first_entry} = {
+        id => '000000F_001|arrow',
+        length => 368138,
+        offset =>  19,
+        linebases => 60,
+        linewidth => 61,
+        #qualoffset => ?,
+    };
 
 };
 
@@ -37,21 +44,22 @@ subtest 'read' => sub{
 
     my $entry = $test{reader}->read;
     ok($entry, 'got entry');
-    my $expected_entry = {
-        id => '000000F_001|arrow',
-        length => 368138,
-        offset =>  19,
-        linebases => 60,
-        linewidth => 61,
-        #qualoffset => ?,
-    };
-    is_deeply($entry, $expected_entry, 'got correct entry');
+    is_deeply($entry, $test{first_entry}, 'got correct entry');
 
     my $i = 1;
     while ( $test{reader}->read ) {
         $i++;
     }
     is($i, 6, 'read the correct number of entries');
+
+};
+
+subtest 'reset' => sub{
+    plan tests => 3;
+
+    ok(!$test{reader}->read, 'no more entries');
+    ok($test{reader}->reset, 'reset');
+    is_deeply($test{reader}->read, $test{first_entry}, 'got correct entry');
 
 };
 

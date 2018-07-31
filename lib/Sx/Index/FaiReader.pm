@@ -33,4 +33,6 @@ sub read {
     \%entry;
 }
 
+sub reset { $_[0]->io->seek(0, 0) }
+
 1;
