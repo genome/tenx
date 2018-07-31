@@ -13,7 +13,7 @@ subtest 'setup' => sub{
     plan tests => 2;
 
     use_ok($test{class}) or die;
-    $test{data_dir} = TenxTestEnv::test_data_directory_for_class($test{class});
+    $test{data_dir} = TenxTestEnv::test_data_directory_for_class('Sx::Index::Fai');
     ok(-d $test{data_dir}->stringify, 'data dir exists');
 
     $test{first_entry} = {
