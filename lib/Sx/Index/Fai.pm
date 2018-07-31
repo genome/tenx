@@ -35,4 +35,23 @@ sub entry_for_id {
     $self->reader->read;
 }
 
+sub entries_for_id_regex {
+    my ($self, $id) = @_;
+    die "No id regex given to get entries!" if not defined $id;
+
+    my $regex = qr/$id/;
+    my $ids_and_positions = $self->ids_and_positions;
+    my @ids = grep { $_ =~ /$regex/ } keys %$ids_and_positions;
+    return if not @ids;
+
+    my @e;
+    my $reader = $self->reader;
+    for my $id ( @ids ) {
+        $reader->seek($ids_and_positions->{$id});
+        push @e, $reader->read;
+    }
+
+    \@e;
+}
+
 1;
