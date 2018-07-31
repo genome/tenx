@@ -6,7 +6,7 @@ use warnings 'FATAL';
 use TenxTestEnv;
 
 use Test::Exception;
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 my %test = ( class => 'Sx::Index::FaiReader', );
 subtest 'setup' => sub{
@@ -60,6 +60,18 @@ subtest 'reset' => sub{
     ok(!$test{reader}->read, 'no more entries');
     ok($test{reader}->reset, 'reset');
     is_deeply($test{reader}->read, $test{first_entry}, 'got correct entry');
+
+};
+
+subtest 'seek and tell' => sub{
+    plan tests => 4;
+
+    my $position = $test{reader}->tell;
+    ok($position, 'tell');
+    $test{reader}->seek(0);
+    is($test{reader}->tell, 0, 'seek');
+    is_deeply($test{reader}->read, $test{first_entry}, 'got correct entry');
+    is($test{reader}->tell, $position, 'tell again');
 
 };
 

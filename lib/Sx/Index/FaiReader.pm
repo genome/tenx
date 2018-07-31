@@ -34,5 +34,10 @@ sub read {
 }
 
 sub reset { $_[0]->io->seek(0, 0) }
+sub tell { $_[0]->io->tell }
+sub seek {
+    die "No position to seek!" if not defined $_[1];
+    $_[0]->io->seek($_[1], 0);
+}
 
 1;
