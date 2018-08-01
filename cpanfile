@@ -8,6 +8,7 @@ requires 'File::Slurp';
 requires 'List::MoreUtils';
 requires 'Params::Validate';
 requires 'Path::Class';
+requires 'Set::Scalar';
 requires 'Test::Exception';
 requires 'Text::CSV';
 requires 'UR';
