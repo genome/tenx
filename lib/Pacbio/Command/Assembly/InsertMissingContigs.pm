@@ -101,7 +101,7 @@ sub _get_haplotigs_set_from_fai {
     while ( my $e = $fai->reader->read ) {
         my @t = split(/\|/, $e->{id});
         $t[0] =~ s/_\d+$//;
-        $set->insert( join('|', @t) );
+        $set->insert( $self->primary_contig_id_for_haplotig_id($e->{id}) );
     }
 
     $set;
@@ -154,6 +154,7 @@ sub _write_contigs {
             my $pos = $entry->{offset} - length($ctg_id) - 2;
             $hfh->seek($pos, 0);
             $seq = $hseqio->next_seq;
+            $seq->id( $self->primary_contig_id_for_haplotig_id($ctg_id) );
         }
         else {
             $seq = $pseqio->next_seq;
@@ -162,4 +163,12 @@ sub _write_contigs {
     }
 }
 
+sub primary_contig_id_for_haplotig_id {
+    my ($self, $primary_id) = @_;
+    $self->fatal_message("No haplotig id to convert into primary contig id!") if not defined $primary_id;
+    my @t = split(/\|/, $primary_id);
+    $t[0] =~ s/_(\d+)$//;
+    $self->fatal_message("Could not find haplotig number in id: $primary_id") if not $1;
+    join('|', @t);
+}
 1;

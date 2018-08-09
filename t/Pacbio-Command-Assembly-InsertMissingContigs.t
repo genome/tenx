@@ -7,7 +7,7 @@ use TenxTestEnv;
 
 use File::Slurp;
 use Test::Exception;
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 my %test = ( class => 'Pacbio::Command::Assembly::InsertMissingContigs', );
 subtest 'setup' => sub{
@@ -22,13 +22,9 @@ subtest 'setup' => sub{
 subtest 'execute' => sub{
     plan tests => 6;
 
-    #my $output = $test{data_dir}->file('got.fasta')->stringify;
-    #unlink $output;
-
     my $cmd = $test{class}->create(
         primary_fasta => $test{data_dir}->file('p_ctg.fasta')->stringify,
         haplotigs_fasta => $test{data_dir}->file('h_ctg.fasta')->stringify,
-        #output_fasta => $output,
     );
     ok($cmd, 'create command');
 
@@ -37,11 +33,24 @@ subtest 'execute' => sub{
     lives_ok(sub{ $cmd->execute }, 'execute');
     ok($cmd->result, 'command result');
 
-    my $expected_output = File::Slurp::slurp( $test{data_dir}->file('expected.fasta')->stringify );
+    my $got = $test{data_dir}->file('got.fasta')->stringify;
+    unlink $got;
+    File::Slurp::write_file($got, $output);
+
+    my $expected_output = File::Slurp::slurp( $test{data_dir}->file('p.expected.fasta')->stringify );
     is($output, $expected_output, 'output fasta matches');
 
     is($cmd->primary_fai, $cmd->primary_fasta.'.fai', 'set primary fai');
     is($cmd->haplotigs_fai, $cmd->haplotigs_fasta.'.fai', 'set haplotigs fai');
+
+};
+
+subtest 'primary id for haplotig id' => sub{
+    plan tests => 3;
+
+    throws_ok(sub{ $test{class}->primary_contig_id_for_haplotig_id(); } , qr/No haplotig id/, 'fails w/o haplotig id');
+    throws_ok(sub{ $test{class}->primary_contig_id_for_haplotig_id('000200F|arrow'); } , qr/Could not find haplotig number/, 'fails w/o invalid haplotig id');
+    is($test{class}->primary_contig_id_for_haplotig_id('000200F_002|arrow'), '000200F|arrow', 'correct primary id');
 
 };
 
