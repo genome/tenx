@@ -51,7 +51,7 @@ sub entries_for_id_regex {
         push @e, $reader->read;
     }
 
-    \@e;
+    [ sort { $a->{offset} <=> $b->{offset} } @e ];
 }
 
 1;
