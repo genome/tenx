@@ -4,6 +4,7 @@ use strict;
 use warnings 'FATAL';
 
 use Bio::SeqIO;
+use List::Util;
 use List::MoreUtils;
 use Set::Scalar;
 use Sx::Index::Fai;
@@ -30,11 +31,14 @@ class Pacbio::Command::Assembly::InsertMissingContigs {
             doc => 'Haplotigs contigs fasta index file. If not given, ".fai" will be appended to the haplotigs contigs fasta file name.',
         },
     },
-    has_optional_output => {
-        output_fasta => {
+    has_output => {
+        output_primary_fasta => {
             is => 'Text',
-            default_value => '-',
-            doc => 'Output fasta file. Defaults to STDOUT.',
+            doc => 'Output primary contigs fasta file.',
+        },
+        output_haplotigs_fasta => {
+            is => 'Text',
+            doc => 'Output haplotigs fasta file.',
         },
     },
     has_optional_transient => {
@@ -47,18 +51,19 @@ sub __init__ {
     my ($self) = @_;
 
     for my $type (qw/ primary haplotigs /) {
+        # input fasta
         my $fasta_method = join('_', $type, 'fasta');
         $self->fatal_message("File $fasta_method does not exist!") if not -s $self->$fasta_method;
+        # input fai
         my $fai_method = join('_', $type, 'fai');
         if ( not $self->$fai_method ) {
             $self->$fai_method( join('.', $self->$fasta_method, 'fai') );
         }
         $self->fatal_message("File $fai_method does not exist!") if not -s $self->$fai_method;
-    }
-
-    my $output_fasta = $self->output_fasta;
-    if ( $output_fasta and $output_fasta ne '-' ) {
-        $self->fatal_message("Output file exists: $output_fasta. Please change detination, or remove it.") if -s $output_fasta;
+        # output fasta
+        my $method = join('_', 'output', $type, 'fasta');
+        my $fasta = $self->$method;
+        $self->fatal_message('Output %s fasta exists: %s. Please change detination, or remove it.', $type, $fasta) if -s $fasta;
     }
 }
 
@@ -70,11 +75,7 @@ sub execute {
     my $haplotigs = $self->_get_haplotigs_set_from_fai;
     my $missing_ctgs = $haplotigs->difference($ctgs);
     $self->fatal_message("No missing contigs found!") if not $missing_ctgs->members;
-    my $missing_haplotigs = $self->_get_missing_haplotigs($missing_ctgs);
-    #print Data::Dumper::Dumper([sort $ctgs->members]);
-    #print Data::Dumper::Dumper([sort $missing_ctgs->members]);
-    #print Data::Dumper::Dumper([sort $missing_haplotigs->members]);
-    $self->_write_contigs($ctgs->union($missing_haplotigs));
+    $self->_write_contigs($ctgs, $missing_ctgs);
     1;
 }
 
@@ -99,76 +100,99 @@ sub _get_haplotigs_set_from_fai {
 
     my $set = Set::Scalar->new;
     while ( my $e = $fai->reader->read ) {
-        my @t = split(/\|/, $e->{id});
-        $t[0] =~ s/_\d+$//;
-        $set->insert( $self->primary_contig_id_for_haplotig_id($e->{id}) );
-    }
-
-    $set;
-}
-
-sub _get_missing_haplotigs {
-    my ($self, $missing) = @_;
-
-    my $fai = $self->_haplotigs_fai;
-    my $set = Set::Scalar->new;
-    for my $id ( $missing->members ) {
-        my @t = split(/\|/, $id);
-        my $entries = $fai->entries_for_id_regex("^$t[0]");
-        $self->fatal_message("Failed to get haplotigs for id regex: $id") if not $entries;
-        my ($max) = sort { $b->{length} <=> $a->{length} } @$entries;
-        $set->insert($max->{id});
+        my $haplotig_id_tokens = $self->haplotig_id_tokens($e->{id});
+        $set->insert( $haplotig_id_tokens->[0].$haplotig_id_tokens->[2] );
     }
 
     $set;
 }
 
 sub _write_contigs {
-    my ($self, $contigs) = @_;
+    my ($self, $ctgs, $missing_ctgs) = @_;
 
-	my $pfh = IO::File->new($self->primary_fasta, 'r');
-	$self->fatal_message('Failed to open primary fasta! %s', $self->primary_fasta) if not $pfh;
-	my $pseqio = Bio::SeqIO->new(
-		-fh => $pfh,
+    # Seq INs
+	my $p_seqin = Bio::SeqIO->new(
+		-file => $self->primary_fasta,
 		-format => 'Fasta',
 	);
-
 	my $hfh = IO::File->new($self->haplotigs_fasta, 'r');
 	$self->fatal_message('Failed to open haplotigs fasta! %s', $self->haplotigs_fasta) if not $hfh;
-	my $hseqio = Bio::SeqIO->new(
+	my $h_seqin = Bio::SeqIO->new(
 		-fh => $hfh,
 		-format => 'Fasta',
 	);
 
-	my $output_fasta = $self->output_fasta;
-	my %seqio_params = ( $self->output_fasta eq '-' )
-	? ( -fh => \*STDOUT )
-	: ( -file => ">$output_fasta" );
-	$seqio_params{'-format'} = 'Fasta';
-	my $oseqio = Bio::SeqIO->new(%seqio_params);
+    # Seq OUTs
+	my $p_seqout = Bio::SeqIO->new(
+        -format => 'Fasta',
+        -file => '>'.$self->output_primary_fasta,
+    );
+	my $h_seqout = Bio::SeqIO->new(
+        -format => 'Fasta',
+        -file => '>'.$self->output_haplotigs_fasta,
+    );
 
-    my $seq;
-    for my $ctg_id ( sort { $a cmp $b } $contigs->members ) {
-        my $entry = $self->_haplotigs_fai->entry_for_id($ctg_id);
-        if ( defined $entry ) {
-            my $pos = $entry->{offset} - length($ctg_id) - 2;
-            $hfh->seek($pos, 0);
-            $seq = $hseqio->next_seq;
-            $seq->id( $self->primary_contig_id_for_haplotig_id($ctg_id) );
+    for my $ctg_id ( sort { $a cmp $b } ($ctgs->members, $missing_ctgs->members) ) {
+        if ( $ctgs->has($ctg_id) ) {
+            # Contig should be next in primary fasta - write it to the output primary fasta
+            my $seq = $p_seqin->next_seq;
+            $self->fatal_message('Expected primary contig %s but got %s', $ctg_id, $seq->id) if $ctg_id ne $seq->id;
+            $p_seqout->write_seq($seq);
+
+            # Get entries from haplotig fai for this primary id, write them to haplotig fasta
+            my $entries = $self->_haplotigs_fai->entries_for_id_regex('^'.$ctg_id.'_');
+            next if not $entries; # dunno, could happen?
+            for my $entry ( @$entries ) {
+                my $seq = $h_seqin->next_seq;
+                $self->fatal_message('Expected haplotig %s but got %s', $entry->{id}, $seq->id) if $entry->{id} ne $seq->id;
+                $h_seqout->write_seq($seq);
+            }
         }
-        else {
-            $seq = $pseqio->next_seq;
+        else { # MISSING
+            # Get entries from haplotig fai, marking the longest one
+            my $entries = $self->_get_haplotigs_for_primary_ctg_id_marking_longest($ctg_id);
+            my $i = 1;
+            for my $entry ( @$entries ) {
+                my $seq = $h_seqin->next_seq;
+                $self->fatal_message('Expected haplotig %s but got %s', $entry->{id}, $seq->id) if $entry->{id} ne $seq->id;
+                if ( exists $entry->{longest} ) { # longest goes to primary using the ctg id
+                    $seq->id($ctg_id);
+                    $p_seqout->write_seq($seq);
+                }
+                else { # others go to the output haplotig, re-numbering them
+                    my $haplotig_id_tokens = $self->haplotig_id_tokens($entry->{id});
+                    $seq->id( sprintf('%s_%03d%s', $haplotig_id_tokens->[0], $i, $haplotig_id_tokens->[2]) );
+                    $h_seqout->write_seq($seq);
+                    $i++;
+                }
+            }
         }
-        $oseqio->write_seq($seq);
     }
 }
 
-sub primary_contig_id_for_haplotig_id {
-    my ($self, $primary_id) = @_;
-    $self->fatal_message("No haplotig id to convert into primary contig id!") if not defined $primary_id;
-    my @t = split(/\|/, $primary_id);
-    $t[0] =~ s/_(\d+)$//;
-    $self->fatal_message("Could not find haplotig number in id: $primary_id") if not $1;
-    join('|', @t);
+sub _get_haplotigs_for_primary_ctg_id_marking_longest {
+    my ($self, $ctg_id) = @_;
+
+    my $fai = $self->_haplotigs_fai;
+    my $entries = $fai->entries_for_id_regex('^'.$ctg_id.'_');
+    $self->fatal_message('No entries for primary contig id: %s', $ctg_id) if not $entries;
+
+    my $lengths = Set::Scalar->new( map { $_->{length} } @$entries );
+    my $longest_length = List::Util::max( $lengths->members );
+    my $longest = List::MoreUtils::first_value { $_->{length} == $longest_length } @$entries;
+    $longest->{longest} = 1;
+    $entries
 }
+
+sub haplotig_id_tokens {
+    my ($self, $haplotig_id) = @_;
+    $self->fatal_message("No haplotig id to get tokens!") if not defined $haplotig_id;
+    my ($ctg_num, $rest) = split(/_/, $haplotig_id, 2);
+    $self->fatal_message("Could not find haplotig number in id: $haplotig_id") if not $rest;
+    $rest =~ s/^(\d+)//;
+    my $num = "$1";
+    $self->fatal_message("Could not find haplotig number in id: $haplotig_id") if not $num;
+    [ $ctg_num, $num, $rest ]; # CTG_NUM HAP_NUM REMAINDER
+}
+
 1;
