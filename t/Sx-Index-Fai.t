@@ -65,8 +65,9 @@ subtest 'entries_for_id_regex' => sub{
     my $fai = $test{fai};
     throws_ok(sub{ $fai->entries_for_id_regex; }, qr/No id regex given/, 'fails w/o id regex');
     lives_ok(sub{ $fai->entries_for_id_regex('blah'); }, 'ok if id not found');
-    my @e = $fai->entries_for_id_regex('^000000F_004');
-    is_deeply(@e, [$test{entry}], 'got entries by id regex');
+    my $expected = [ $fai->entry_for_id('000000F_001|arrow'), $fai->entry_for_id('000000F_004|arrow') ];
+    my $got = $fai->entries_for_id_regex('^000000F_00[14]');
+    is_deeply($got, $expected, 'got entries by id regex');
 
 };
 
