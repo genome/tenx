@@ -34,6 +34,7 @@ class Pacbio::Command::Assembly::BaxToBam::GenerateCommands {
         },
     },
     has_optional_transient => {
+        _bam_output_directory => { is => 'Path::Class::Dir', },
         _runs => { is => 'ARRAY', },
         _commands_fh => { is => 'IO::Handle', },
     },
@@ -46,7 +47,7 @@ sub __init__ {
     my @runs;
     for my $directory ( $self->run_directories ) {
         push @runs, Pacbio::Run->new(
-            directory => Path::Class::dir( $directory),
+            directory => Path::Class::dir($directory),
             machine_type => 'rsii',
         );
     }
@@ -62,6 +63,12 @@ sub __init__ {
         ? 'STDOUT'
         : IO::File->new($commands_file, 'r')
     );
+
+    my $bam_output_directory = $self->bam_output_directory;
+    if ( $bam_output_directory ) {
+        $self->fatal_message('Given bam output directory, but it does not exist!') if not -d $bam_output_directory;
+        $self->_bam_output_directory( Path::Class::dir($bam_output_directory) );
+    }
 
 }
 
@@ -85,7 +92,14 @@ sub execute {
 sub _bam_output_for_analysis {
     my ($self, $analysis) = @_;
     return if not $self->bam_output_directory;
-    # TODO
+    # m151026_060206_00116_c100928752550000001823208204291687_s1_p0.subreads.bam
+    # m151026_060206_00116_c100928752550000001823208204291687_s1_p0.bax.h5
+    my @bax_files = map { $_->stringify } grep { "$_" =~ /\.bax\.h5$/ } @{$analysis->analysis_files};
+    my @bax_basenames = List::Util::uniq( 
+        map { my $bn = $_->basename; my ($t) = split(/\./, $bn, 2); $t; } grep { "$_" =~ /\.bax\.h5$/ } @{$analysis->analysis_files}
+    );
+    $self->fatal_message('Expected one BAX file basename: %s', join(' ', @bax_basenames)) if @bax_basenames != 1;
+    $self->_bam_output_directory->file( join('.', $bax_basenames[0], 'subreads', 'bam') );
 }
 
 sub _bax_to_bam_command_for_analysis {
