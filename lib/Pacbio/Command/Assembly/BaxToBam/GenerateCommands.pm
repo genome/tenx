@@ -105,7 +105,7 @@ sub _bam_output_for_analysis {
 sub _bax_to_bam_command_for_analysis {
     my ($self, $analysis) = @_;
 
-    my @bax_files = map { $_->stringify } grep { "$_" =~ /\.bax\.h5$/ } @{$analysis->analysis_files};
+    my @bax_files = sort { $a cmp $b } map { $_->stringify } grep { "$_" =~ /\.bax\.h5$/ } @{$analysis->analysis_files};
     $self->fatal_message('Incorrect number (%d) of BAX files for run analysis: %s', scalar(@bax_files), $analysis->alias) if not @bax_files or @bax_files != 3;
 
     # bsub -o /dir/%LOG bax2bam -o %OUT_BAM BAX_FILES
