@@ -1,5 +1,6 @@
 requires 'Bio::Seq';
 requires 'Bio::SeqIO';
+requires 'Class::Accessor';
 requires 'DBD::mysql';
 requires 'Date::Format';
 requires 'Devel::Cover';
