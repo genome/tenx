@@ -1,0 +1,22 @@
+Run: /home/ebelter/dev/tenx/t/data/Pacbio-Run/6U00E3 rsii
+Library Name: HG
+Analyses:
+well sample_name                  matches?
+A01  4808lj_HG02818_Lib2_50pM     yes     
+A02  4808lj_HG02818_Lib2_50pM     yes     
+B01  4808lj_HG02818_Lib2_75pM     yes     
+B02  4808lj_HG02818_Lib2_75pM     yes     
+C01  4808lj_HG02818_Lib2_100pM    yes     
+C02  4808lj_HG02818_Lib2_100pM    yes     
+D01  4808lj_HG02818_Lib2_50pM     yes     
+D02  4808lj_HG02818_Lib2_50pM     yes     
+E01  4808lj_HG02818_Lib2_75pM     yes     
+E02  4808lj_HG02818_Lib2_75pM     yes     
+F01  4808lj_HG02818_Lib2_50pM     yes     
+F02  4808lj_HG02818_Lib2_50pM     yes     
+G01  4808lh_EEAI_H10407_Lib1_75pM no      
+G02  4808lj_HG02818_Lib2_75pM     yes     
+H01  4808li_EEAI_jf1390_Lib1_75pM no      
+H02  4808lj_HG02818_Lib2_50pM     yes     
+Analyses Total: 16
+Matched Analyses: 14
