@@ -25,6 +25,11 @@ class Pacbio::Command::Assembly::BaxToBam::GenerateCommands {
             is => 'Text',
             doc => 'Give the bam output directory to check if the bam already exists. If so, the bax2bam command for that cell will not be printed.',
         },
+        library_name => {
+            is => 'Text',
+            default_value => '.',
+            doc => "The library name to query to match a run's anaylses bax files. If not given, all analyses from the runs will be used.",
+        },
     },
     has_optional_output => {
         commands_file => {
@@ -76,8 +81,16 @@ sub execute {
     my ($self) = @_;
 
     $self->__init__;
+
+    my $library_name = $self->library_name;
+    my $regex = qr/$library_name/;
+
     for my $run ( @{$self->_runs} ) {
-        my $analyses = $run->analyses;
+        my $analyses = $run->analyses_for_sample($regex);
+        if ( not $analyses ) {
+            $self->warning_message("No analyses found for library name %s on run %", $library_name, $run->__name__);
+            next;
+        }
         for my $analysis ( @$analyses ) {
             my $bam = $self->_bam_output_for_analysis($analysis);
             next if $bam and -s $bam;

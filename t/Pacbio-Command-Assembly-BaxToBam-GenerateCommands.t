@@ -7,7 +7,7 @@ use TenxTestEnv;
 
 use File::Slurp;
 use Test::Exception;
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 my %test = ( class => 'Pacbio::Command::Assembly::BaxToBam::GenerateCommands', );
 subtest 'setup' => sub{
@@ -39,6 +39,29 @@ subtest 'execute' => sub{
     ok($cmd->result, 'command result');
 
     my $expected_output = File::Slurp::slurp( $test{data_dir}->file('expected.out')->stringify );
+    my $base_test_data_dir = TenxTestEnv::test_data_directory();
+    $expected_output =~ s/\%TDD/$base_test_data_dir/g;
+    is($output, $expected_output, 'output commands matches');
+
+};
+
+subtest 'execute with library name' => sub{
+    plan tests => 4;
+
+    my $library_name = 'EEAI';
+    my $cmd = $test{class}->create(
+        run_directories => [ $test{data_dir}->file('6U00E3')->stringify, ],
+        bam_to_bax_command => 'bsub -q long -o %LOG bam2bax',
+        library_name => $library_name,
+    );
+    ok($cmd, 'create command');
+
+    my $output;
+    open local(*STDOUT), '>', \$output or die $!;
+    lives_ok(sub{ $cmd->execute }, 'execute');
+    ok($cmd->result, 'command result');
+
+    my $expected_output = File::Slurp::slurp( $test{data_dir}->file( join('.', 'expected', $library_name, 'out') )->stringify );
     my $base_test_data_dir = TenxTestEnv::test_data_directory();
     $expected_output =~ s/\%TDD/$base_test_data_dir/g;
     is($output, $expected_output, 'output commands matches');
