@@ -33,6 +33,8 @@ subtest 'execute' => sub{
     lives_ok(sub{ $cmd->execute; }, 'execute');
 
     my $expected_output = File::Slurp::slurp( $test{data_dir}->file('expected.out') );
+    my $base_test_data_dir = TenxTestEnv::test_data_directory();
+    $expected_output =~ s/\%TDD/$base_test_data_dir/g;
     is($output, $expected_output, 'output matches');
     File::Slurp::write_file($test{data_dir}->file('got'), $output);
 

@@ -1,4 +1,4 @@
-Run: /home/ebelter/dev/tenx/t/data/Pacbio-Run/6U00E3 rsii
+Run: %TDD/Pacbio-Run/6U00E3 rsii
 Library Name: HG
 Analyses:
 well sample_name                  matches?
