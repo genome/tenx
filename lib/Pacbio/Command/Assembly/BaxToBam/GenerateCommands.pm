@@ -4,7 +4,9 @@ use strict;
 use warnings 'FATAL';
 
 use IO::File;
+use List::Util;
 use Pacbio::Run;
+use Pacbio::Run::AnalysisFactoryForRsii;
 use Path::Class;
 
 class Pacbio::Command::Assembly::BaxToBam::GenerateCommands {
@@ -14,10 +16,10 @@ class Pacbio::Command::Assembly::BaxToBam::GenerateCommands {
             is => 'Text',
             doc => 'Command to fill in with BAX files and logging files. BAX files will be appended to the command. Use %LOG for the log file base name for each cell.  Example: bsub -o /my-logging-dir/%LOG bam2bax',
         },
-        run_directories => {
+        bax_sources => {
             is => 'Text',
             is_many => 1,
-            doc => 'Pacbio run directories',
+            doc => 'Pacbio run directories OR FOF of bax files.',
         },
     },
     has_optional_input => {
@@ -39,9 +41,9 @@ class Pacbio::Command::Assembly::BaxToBam::GenerateCommands {
         },
     },
     has_optional_transient => {
-        _bam_output_directory => { is => 'Path::Class::Dir', },
-        _runs => { is => 'ARRAY', },
+        _analyses => { is => 'ARRAY', },
         _commands_fh => { is => 'IO::Handle', },
+        _bam_output_directory => { is => 'Text', },
     },
     doc => 'insert missing primary contigs from haplotigs',
 };
@@ -49,14 +51,17 @@ class Pacbio::Command::Assembly::BaxToBam::GenerateCommands {
 sub __init__ {
     my ($self) = @_;
 
-    my @runs;
-    for my $directory ( $self->run_directories ) {
-        push @runs, Pacbio::Run->new(
-            directory => Path::Class::dir($directory),
-            machine_type => 'rsii',
-        );
+    my @bax_sources = $self->bax_sources;
+    if ( @bax_sources == 1 and -f $bax_sources[0] ) {
+        $self->_resolve_analyses_from_bax_fof($bax_sources[0]);
     }
-    $self->_runs(\@runs);
+    elsif ( List::Util::all { -d $_ } @bax_sources ) {
+        $self->_resolve_analyses_from_runs(@bax_sources);
+    }
+    else {
+        $self->fatal_message('Can not handle mix of run directories and bax FOFs! %s', join("\n", @bax_sources));
+    }
+    $self->fatal_message("No analyses found in bax sources!\n%s", join("\n", @bax_sources)) if not @{$self->_analyses};
 
     my $commands_file = $self->commands_file;
     if ( $commands_file and $commands_file ne '-' and -s $commands_file ) {
@@ -77,26 +82,49 @@ sub __init__ {
 
 }
 
+sub _resolve_analyses_from_bax_fof {
+    my ($self, $bax_fof) = @_;
+
+    my $fh = IO::File->new($bax_fof, 'r');
+    $self->fatal_message('Failed to open bax FOF!') if not $fh;
+    my @analysis_directories = List::MoreUtils::uniq( map { chomp; file($_)->parent->parent } $fh->getlines );
+    $fh->close;
+
+    my @analyses = map { Pacbio::Run::AnalysisFactoryForRsii->build_from_analysis_directory($_) } @analysis_directories;
+    $self->_analyses(\@analyses);
+}
+
+sub _resolve_analyses_from_runs {
+    my ($self, @runs) = @_;
+
+    my $library_name = $self->library_name;
+    my $regex = qr/$library_name/;
+    my @analyses;
+    for my $directory ( $self->bax_sources ) {
+        my $run = Pacbio::Run->new(
+            directory => Path::Class::dir($directory),
+            machine_type => 'rsii',
+        );
+        my $run_analyses = $run->analyses_for_sample($regex);
+        if ( not $run_analyses ) {
+            $self->warning_message("No analyses found for library name %s on run %", $library_name, $run->__name__);
+            next;
+        }
+        push @analyses, @$run_analyses;
+    }
+    $self->_analyses(\@analyses);
+}
+
 sub execute {
     my ($self) = @_;
 
     $self->__init__;
 
-    my $library_name = $self->library_name;
-    my $regex = qr/$library_name/;
-
-    for my $run ( @{$self->_runs} ) {
-        my $analyses = $run->analyses_for_sample($regex);
-        if ( not $analyses ) {
-            $self->warning_message("No analyses found for library name %s on run %", $library_name, $run->__name__);
-            next;
-        }
-        for my $analysis ( @$analyses ) {
-            my $bam = $self->_bam_output_for_analysis($analysis);
-            next if $bam and -s $bam;
-            my $cmd = $self->_bax_to_bam_command_for_analysis($analysis);
-            $self->_commands_fh->print("$cmd\n");
-        }
+    for my $analysis ( @{$self->_analyses} ) {
+        my $bam = $self->_bam_output_for_analysis($analysis);
+        next if $bam and -s $bam;
+        my $cmd = $self->_bax_to_bam_command_for_analysis($analysis);
+        $self->_commands_fh->print("$cmd\n");
     }
 
     1;

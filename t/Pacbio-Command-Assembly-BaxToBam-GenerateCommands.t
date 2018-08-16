@@ -5,9 +5,10 @@ use warnings 'FATAL';
 
 use TenxTestEnv;
 
+use File::Temp;
 use File::Slurp;
 use Test::Exception;
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 my %test = ( class => 'Pacbio::Command::Assembly::BaxToBam::GenerateCommands', );
 subtest 'setup' => sub{
@@ -24,11 +25,11 @@ subtest 'setup' => sub{
 
 };
 
-subtest 'execute' => sub{
+subtest 'execute with runs' => sub{
     plan tests => 4;
 
     my $cmd = $test{class}->create(
-        run_directories => [ $test{data_dir}->file('6U00E3')->stringify, ],
+        bax_sources => [ $test{data_dir}->file('6U00E3')->stringify, ],
         bam_to_bax_command => 'bsub -q long -o %LOG bam2bax',
     );
     ok($cmd, 'create command');
@@ -45,12 +46,12 @@ subtest 'execute' => sub{
 
 };
 
-subtest 'execute with library name' => sub{
+subtest 'execute with runs and library name' => sub{
     plan tests => 4;
 
     my $library_name = 'EEAI';
     my $cmd = $test{class}->create(
-        run_directories => [ $test{data_dir}->file('6U00E3')->stringify, ],
+        bax_sources => [ $test{data_dir}->file('6U00E3')->stringify, ],
         bam_to_bax_command => 'bsub -q long -o %LOG bam2bax',
         library_name => $library_name,
     );
@@ -68,11 +69,40 @@ subtest 'execute with library name' => sub{
 
 };
 
+subtest 'execute with bax fof' => sub{
+    plan tests => 4;
+
+    my $bax_fof_contents = File::Slurp::slurp($test{data_dir}->file('bax.fof')->stringify);
+    my $base_test_data_dir = TenxTestEnv::test_data_directory();
+    $bax_fof_contents =~ s/\%TDD/$base_test_data_dir/g;
+
+    my ($fh, $bax_fof) = File::Temp::tempfile();
+    $fh->print($bax_fof_contents);
+    $fh->close;
+
+    my $cmd = $test{class}->create(
+        bax_sources => [ $bax_fof ],
+        bam_to_bax_command => 'bsub -q long -o %LOG bam2bax',
+    );
+    ok($cmd, 'create command');
+
+    my $output;
+    open local(*STDOUT), '>', \$output or die $!;
+    lives_ok(sub{ $cmd->execute }, 'execute');
+    ok($cmd->result, 'command result');
+
+    my $expected_output = File::Slurp::slurp( $test{data_dir}->file('expected.bax-fof.out')->stringify );
+    $base_test_data_dir = TenxTestEnv::test_data_directory();
+    $expected_output =~ s/\%TDD/$base_test_data_dir/g;
+    is($output, $expected_output, 'output commands matches');
+
+};
+
 subtest 'execute with some bams completed' => sub{
     plan tests => 4;
 
     my $cmd = $test{class}->create(
-        run_directories => [ $test{data_dir}->file('6U00E3')->stringify, ],
+        bax_sources => [ $test{data_dir}->file('6U00E3')->stringify, ],
         bam_to_bax_command => 'bsub -q long -o %LOG bam2bax',
         bam_output_directory => $test{data_dir}->stringify,
     );
