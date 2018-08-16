@@ -14,7 +14,7 @@ sub build {
     my ($class, $directory) = @_;
 
     die "No run directory given." if not $directory;
-    die "Run directory given does not exist!" if not -d "$directory";
+    die "Run directory given does not exist! $directory" if not -d "$directory";
 
     my (@analyses);
     find(
@@ -45,7 +45,7 @@ sub build_from_analysis_directory {
     my ($class, $directory) = @_;
 
     die "No analysis directory given." if not $directory;
-    die "Analysis directory given does not exist!" if not -d "$directory";
+    die "Analysis directory given does not exist! $directory" if not -d "$directory";
 
     my ($metadata_xml_file, @analysis_files);
     find(
@@ -71,7 +71,7 @@ sub build_from_analysis_directory {
         metadata_xml_file => file($metadata_xml_file),
         %$xml_info,
     );
-    $analysis->add_analysis_files(@analysis_files);
+    $analysis->add_analysis_files( map { file($_) } @analysis_files );
     $analysis;
 }
 
