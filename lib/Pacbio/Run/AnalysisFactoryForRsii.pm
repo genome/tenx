@@ -41,6 +41,40 @@ sub build {
     \@analyses;
 }
 
+sub build_from_analysis_directory {
+    my ($class, $directory) = @_;
+
+    die "No analysis directory given." if not $directory;
+    die "Analysis directory given does not exist!" if not -d "$directory";
+
+    my ($metadata_xml_file, @analysis_files);
+    find(
+        {
+            wanted => sub{
+                if ( /metadata\.xml$/) {
+                    die "Found more than one metadata XML in $directory" if $metadata_xml_file;
+                    $metadata_xml_file = $File::Find::name;
+                }
+                elsif ( $File::Find::dir =~ /Analysis_Results/ and /\.h5$/ ) {
+                    push @analysis_files, $File::Find::name;
+                }
+            },
+        },
+        glob($directory->file('*')->stringify),
+    );
+
+    die "Failed to find analysis metadata xml in directory: $directory" if !$metadata_xml_file;
+    die "Failed to find analysis files in directory: $directory" if !@analysis_files;
+
+    my $xml_info = _load_xml($metadata_xml_file);
+    my $analysis = Pacbio::Run::Analysis->new(
+        metadata_xml_file => file($metadata_xml_file),
+        %$xml_info,
+    );
+    $analysis->add_analysis_files(@analysis_files);
+    $analysis;
+}
+
 sub _load_xml {
     my ($xml_file) = @_;
 
