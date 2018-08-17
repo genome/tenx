@@ -71,7 +71,7 @@ sub build_from_analysis_directory {
         metadata_xml_file => file($metadata_xml_file),
         %$xml_info,
     );
-    $analysis->add_analysis_files( map { file($_) } @analysis_files );
+    $analysis->add_analysis_files( map { file($_) } sort { $a cmp $b } @analysis_files );
     $analysis;
 }
 
