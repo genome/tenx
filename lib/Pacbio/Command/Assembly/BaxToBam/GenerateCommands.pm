@@ -42,7 +42,7 @@ class Pacbio::Command::Assembly::BaxToBam::GenerateCommands {
     },
     has_optional_transient => {
         _analyses => { is => 'ARRAY', },
-        _commands_fh => { is => 'IO::Handle', },
+        _commands_fh => { },
         _bam_output_directory => { is => 'Text', },
     },
     doc => 'insert missing primary contigs from haplotigs',
@@ -71,8 +71,9 @@ sub __init__ {
     $self->_commands_fh(
         ( $commands_file eq '-' )
         ? 'STDOUT'
-        : IO::File->new($commands_file, 'r')
+        : IO::File->new($commands_file, 'w')
     );
+    $self->fatal_message('Failed to open commands file! %s', $commands_file) if not $self->_commands_fh;
 
     my $bam_output_directory = $self->bam_output_directory;
     if ( $bam_output_directory ) {
@@ -127,6 +128,7 @@ sub execute {
         $self->_commands_fh->print("$cmd\n");
     }
 
+    $self->_commands_fh->close if $self->commands_file ne '-';
     1;
 }
 

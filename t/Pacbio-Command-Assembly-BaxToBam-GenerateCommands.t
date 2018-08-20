@@ -8,7 +8,7 @@ use TenxTestEnv;
 use File::Temp;
 use File::Slurp;
 use Test::Exception;
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 my %test = ( class => 'Pacbio::Command::Assembly::BaxToBam::GenerateCommands', );
 subtest 'setup' => sub{
@@ -18,7 +18,7 @@ subtest 'setup' => sub{
 
     $test{data_dir} = TenxTestEnv::test_data_directory_for_class($test{class});
     ok(-d $test{data_dir}->stringify, 'data dir exists');
-    $test{tempdir} = File::Temp::tempdir(CLEANUP => 1);
+    $test{tempdir} = Path::Class::dir( File::Temp::tempdir(CLEANUP => 1) );
 
     $test{run_directories} = TenxTestEnv::test_data_directory_for_class('Pacbio::Run');
     ok(-d $test{run_directories}->stringify, 'run dirs exists');
@@ -49,19 +49,20 @@ subtest 'execute with runs' => sub{
 subtest 'execute with runs and library name' => sub{
     plan tests => 4;
 
+    my $output_file = $test{tempdir}->file('runs-and-library-name.txt');
     my $library_name = 'EEAI';
     my $cmd = $test{class}->create(
         bax_sources => [ $test{data_dir}->file('6U00E3')->stringify, ],
         bam_to_bax_command => 'bsub -q long -o %LOG bam2bax',
         library_name => $library_name,
+        commands_file => "$output_file",
     );
     ok($cmd, 'create command');
 
-    my $output;
-    open local(*STDOUT), '>', \$output or die $!;
     lives_ok(sub{ $cmd->execute }, 'execute');
     ok($cmd->result, 'command result');
 
+    my $output = File::Slurp::slurp("$output_file");
     my $expected_output = File::Slurp::slurp( $test{data_dir}->file( join('.', 'expected', $library_name, 'out') )->stringify );
     my $base_test_data_dir = TenxTestEnv::test_data_directory();
     $expected_output =~ s/\%TDD/$base_test_data_dir/g;
@@ -117,6 +118,19 @@ subtest 'execute with some bams completed' => sub{
     my $base_test_data_dir = TenxTestEnv::test_data_directory();
     $expected_output =~ s/\%TDD/$base_test_data_dir/g;
     is($output, $expected_output, 'output commands matches');
+
+};
+
+subtest 'failures' => sub{
+    plan tests => 2;
+
+    my $cmd = $test{class}->create(
+        bax_sources => [ $test{data_dir}->file('6U00E3')->stringify, ],
+        bam_to_bax_command => 'bsub -q long -o %LOG bam2bax',
+        commands_file => '/blah',
+    );
+    ok($cmd, 'create command');
+    throws_ok(sub{ $cmd->execute; }, qr/Failed to open commands file/, 'fails when cannot open commands file');
 
 };
 
