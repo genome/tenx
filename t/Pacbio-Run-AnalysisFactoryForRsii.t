@@ -29,7 +29,7 @@ subtest 'setup' => sub{
 };
 
 subtest 'build' => sub{
-    plan tests => 10;
+    plan tests => 9;
 
     throws_ok(sub{ $setup{class}->build; }, qr/No run directory given/, 'fails w/o directory');
     throws_ok(sub{ $setup{class}->build('blah'); }, qr/Run directory given does not exist/, 'fails w/ non existing directory');
@@ -37,7 +37,6 @@ subtest 'build' => sub{
     my $analyses = $setup{class}->build($setup{run_dir});
     is(@$analyses, 10, 'built the correct number of analyses');
     is($analyses->[0]->metadata_xml_file, $setup{run_dir}->subdir('A01_1')->file('m160819_231415_00116_c101036512550000001823251411171640_s1_p0.metadata.xml'), 'metadata_xml_file');
-    is($analyses->[0]->sample_name, 'NA19434_4808o3_lib1_50pM', 'sample_name');
     is($analyses->[0]->library_name, 'NA19434_4808o3_lib1_50pM_A1', 'library_name');
     is($analyses->[0]->plate_id, '6U00FA', 'plate_id');
     is($analyses->[0]->version, '2.3.0.3.154799', 'version');
@@ -47,7 +46,7 @@ subtest 'build' => sub{
 };
 
 subtest 'build from analysis directory' => sub{
-    plan tests => 9;
+    plan tests => 8;
 
     throws_ok(sub{ $setup{class}->build_from_analysis_directory; }, qr/No analysis directory given/, 'fails w/o directory');
     throws_ok(sub{ $setup{class}->build_from_analysis_directory('blah'); }, qr/Analysis directory given does not exist/, 'fails w/ non existing directory');
@@ -56,7 +55,6 @@ subtest 'build from analysis directory' => sub{
     my $directory = $setup{run_dir}->subdir('A01_1');
     my $analysis = $setup{class}->build_from_analysis_directory($directory);
     is($analysis->metadata_xml_file, $directory->file('m160819_231415_00116_c101036512550000001823251411171640_s1_p0.metadata.xml'), 'metadata_xml_file');
-    is($analysis->sample_name, 'NA19434_4808o3_lib1_50pM', 'sample_name');
     is($analysis->library_name, 'NA19434_4808o3_lib1_50pM_A1', 'library_name');
     is($analysis->plate_id, '6U00FA', 'plate_id');
     is($analysis->version, '2.3.0.3.154799', 'version');
