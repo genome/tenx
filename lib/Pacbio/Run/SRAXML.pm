@@ -7,6 +7,7 @@ use Path::Class ('file','dir');
 use XML::LibXML;
 use XML::Compile::Schema;
 use XML::Compile::Util;
+use Moose;
 
 sub struct_to_xml {
     my ( $self, $element, $struct ) = @_;
