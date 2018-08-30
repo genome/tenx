@@ -7,6 +7,7 @@ requires 'Devel::Cover';
 requires 'Devel::Cover::Report::Coveralls';
 requires 'File::Slurp';
 requires 'List::MoreUtils';
+requires 'Moose';
 requires 'Params::Validate';
 requires 'Path::Class';
 requires 'Set::Scalar';
