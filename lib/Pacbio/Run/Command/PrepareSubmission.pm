@@ -200,6 +200,7 @@ sub type_for_file {
 
     my @tokens = split(/\./, $file->basename);
     return 'PacBio_HDF5' if $tokens[$#tokens] eq 'h5';
+    return 'bam' if $tokens[$#tokens] eq 'xml' and $self->machine_type eq 'sequel';
     $tokens[$#tokens];
 }
 

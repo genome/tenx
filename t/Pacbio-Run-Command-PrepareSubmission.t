@@ -116,11 +116,16 @@ subtest 'execute sequel' => sub{
 };
 
 subtest 'type_for_file' => sub{
-    plan tests => 3;
+    plan tests => 5;
 
-    throws_ok(sub{ $test{class}->type_for_file; }, qr/No file given/, 'fails w/o file');
-    is($test{class}->type_for_file( $test{tempdir}->file('foo.bar.bam') ), 'bam', 'type for bam');
-    is($test{class}->type_for_file( $test{tempdir}->file('foo.h5') ), 'PacBio_HDF5', 'type for hd5');
+    my $cmd = $test{class}->create(machine_type => 'rsii');
+    throws_ok(sub{ $cmd->type_for_file; }, qr/No file given/, 'fails w/o file');
+    is($cmd->type_for_file( $test{tempdir}->file('foo.bar.bam') ), 'bam', 'type for bam');
+    is($cmd->type_for_file( $test{tempdir}->file('foo.h5') ), 'PacBio_HDF5', 'type for hd5');
+    is($cmd->type_for_file( $test{tempdir}->file('foo.bar.bam.xml') ), 'xml', 'type for rsii bam');
+    $cmd->machine_type('sequel');
+    is($cmd->type_for_file( $test{tempdir}->file('foo.bar.bam.xml') ), 'bam', 'type for sequel xml');
+
 };
 
 done_testing();
