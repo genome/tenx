@@ -15,4 +15,6 @@ requires 'Test::Exception';
 requires 'Text::CSV';
 requires 'UR';
 requires 'UR::Object::Command::Crud';
+requires 'XML::Compile::Schema';
+requires 'XML::LibXML';
 requires 'YAML';
