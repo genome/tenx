@@ -127,7 +127,7 @@ subtest 'failures' => sub{
     my $cmd = $test{class}->create(
         bax_sources => [ $test{data_dir}->file('6U00E3')->stringify, ],
         bam_to_bax_command => 'bsub -q long -o %LOG bam2bax',
-        commands_file => '/blah',
+        commands_file => '/foo/bar',
     );
     ok($cmd, 'create command');
     throws_ok(sub{ $cmd->execute; }, qr/Failed to open commands file/, 'fails when cannot open commands file');
