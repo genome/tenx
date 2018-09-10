@@ -41,7 +41,7 @@ subtest 'build' => sub{
     is($analyses->[0]->plate_id, '6U00FA', 'plate_id');
     is($analyses->[0]->version, '2.3.0.3.154799', 'version');
     is($analyses->[0]->well, 'A01', 'well');
-    is_deeply($analyses->[0]->analysis_files, $setup{A01_1_analysis_files}, 'analysis files');
+    is_deeply([sort @{$analyses->[0]->analysis_files}], [sort @{$setup{A01_1_analysis_files}}], 'analysis files');
 
 };
 

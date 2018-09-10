@@ -139,7 +139,7 @@ sub _bam_output_for_analysis {
     # m151026_060206_00116_c100928752550000001823208204291687_s1_p0.bax.h5
     my @bax_files = map { $_->stringify } grep { "$_" =~ /\.bax\.h5$/ } @{$analysis->analysis_files};
     my @bax_basenames = List::Util::uniq( 
-        map { my $bn = $_->basename; my ($t) = split(/\./, $bn, 2); $t; } grep { "$_" =~ /\.bax\.h5$/ } @{$analysis->analysis_files}
+        map { my $bn = $_->basename; my ($t) = split(/\./, $bn, 2); $t; } grep { "$_" =~ /\.bax\.h5$/ } sort @{$analysis->analysis_files}
     );
     $self->fatal_message('Expected one BAX file basename: %s', join(' ', @bax_basenames)) if @bax_basenames != 1;
     $self->_bam_output_directory->file( join('.', $bax_basenames[0], 'subreads', 'bam') );
