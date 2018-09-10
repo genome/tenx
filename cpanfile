@@ -1,7 +1,7 @@
 requires 'Bio::Seq';
 requires 'Bio::SeqIO';
 requires 'Class::Accessor';
-requires 'DBD::mysql', '4.046_1';
+requires 'DBD::mysql', 4.046;
 requires 'Date::Format';
 requires 'Devel::Cover';
 requires 'Devel::Cover::Report::Coveralls';
